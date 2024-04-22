@@ -1,0 +1,27 @@
+- name: Execute Script on Slave
+  hosts: all
+  become: true  # This allows running commands with elevated privileges
+
+  tasks:
+    - name: Set cron job to check uptime of the server every 12am
+      cron:
+        name: Check server uptime
+        minute: "0"
+        hour: "0"
+        job: "usr/bin/uptime > /var/log/server_uptime.log 2>1"
+        state: present
+          
+          
+          
+    - name: Copy the Bash script to the slave machine
+      copy:
+        src: /home/vagrant/lamp_scripts.sh  # Replace with the actual path to your script
+        dest: /home/vagrant/lamp_scripts.sh  # Replace with the desired path on the slave
+        owner: root
+        group: root
+        mode: 0744
+      register: lamp_scripts_copy_result
+
+    - name: Execute the Bash script on the slave machine
+      shell: /home/vagrant/lamp_scripts.sh
+      when: lamp_scripts_copy_result.changed  # Only execute if the script was copied
